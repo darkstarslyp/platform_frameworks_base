@@ -665,6 +665,8 @@ public final class ViewRootImpl implements ViewParent,
 
     /**
      * We have one child
+     * 
+     * UI硬件加速渲染环境的初始化
      */
     public void setView(View view, WindowManager.LayoutParams attrs, View panelParentView) {
         synchronized (this) {

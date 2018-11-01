@@ -97,7 +97,9 @@ public final class Choreographer {
 
     // The number of milliseconds between animation frames.
     private static volatile long sFrameDelay = DEFAULT_FRAME_DELAY;
-
+    
+    // 重写ThreadLocal的initialValue函数，初始化获取不同的值。
+    // 每一个Thread 必须要有对应的Looper ，才能初始化对应的Choreographer.java
     // Thread local storage for the choreographer.
     private static final ThreadLocal<Choreographer> sThreadInstance =
             new ThreadLocal<Choreographer>() {
@@ -237,11 +239,15 @@ public final class Choreographer {
     private Choreographer(Looper looper, int vsyncSource) {
         mLooper = looper;
         mHandler = new FrameHandler(looper);
+
+        //创建用于接收VSync信号的对象
         mDisplayEventReceiver = USE_VSYNC
                 ? new FrameDisplayEventReceiver(looper, vsyncSource)
                 : null;
+
         mLastFrameTimeNanos = Long.MIN_VALUE;
 
+        //mFrameIntervalNanos：帧间时长，一般等于16.7ms.
         mFrameIntervalNanos = (long)(1000000000 / getRefreshRate());
 
         mCallbackQueues = new CallbackQueue[CALLBACK_LAST + 1];
@@ -654,13 +660,17 @@ public final class Choreographer {
             long intendedFrameTimeNanos = frameTimeNanos;
             startNanos = System.nanoTime();
             final long jitterNanos = startNanos - frameTimeNanos;
+
             if (jitterNanos >= mFrameIntervalNanos) {
                 final long skippedFrames = jitterNanos / mFrameIntervalNanos;
+                
+                //当掉帧个数超过30，则输出相应log
                 if (skippedFrames >= SKIPPED_FRAME_WARNING_LIMIT) {
                     Log.i(TAG, "Skipped " + skippedFrames + " frames!  "
                             + "The application may be doing too much work on its main thread.");
                 }
                 final long lastFrameOffset = jitterNanos % mFrameIntervalNanos;
+
                 if (DEBUG_JANK) {
                     Log.d(TAG, "Missed vsync by " + (jitterNanos * 0.000001f) + " ms "
                             + "which is more than the frame interval of "
@@ -668,7 +678,9 @@ public final class Choreographer {
                             + "Skipping " + skippedFrames + " frames and setting frame "
                             + "time to " + (lastFrameOffset * 0.000001f) + " ms in the past.");
                 }
-                frameTimeNanos = startNanos - lastFrameOffset;
+
+                frameTimeNanos = startNanos - lastFrameOffset; //对齐帧的时间间隔
+
             }
 
             if (frameTimeNanos < mLastFrameTimeNanos) {
@@ -692,6 +704,12 @@ public final class Choreographer {
             mFrameScheduled = false;
             mLastFrameTimeNanos = frameTimeNanos;
         }
+
+        //最终有4个回调方法，依次为如下：
+        //INPUT：输入事件
+        //ANIMATION：动画
+        //TRAVERSAL：窗口刷新
+        //COMMIT
 
         try {
             Trace.traceBegin(Trace.TRACE_TAG_VIEW, "Choreographer#doFrame");

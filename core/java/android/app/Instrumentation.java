@@ -1634,6 +1634,21 @@ public class Instrumentation {
      *
      * {@hide}
      */
+
+    /**
+    
+caller: 当前应用的ApplicationThread对象mAppThread;
+callingPackage: 调用当前ContextImpl.getBasePackageName(),获取当前Activity所在包名;
+intent: 这便是启动Activity时,传递过来的参数;
+resolvedType: 调用intent.resolveTypeIfNeeded而获取;
+resultTo: 来自于当前Activity.mToken
+resultWho: 来自于当前Activity.mEmbeddedID
+requestCode = -1;
+startFlags = 0;
+profilerInfo = null;
+options = null;
+    
+     */
     @UnsupportedAppUsage
     public ActivityResult execStartActivity(
             Context who, IBinder contextThread, IBinder token, Activity target,

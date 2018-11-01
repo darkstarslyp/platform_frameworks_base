@@ -1191,7 +1191,17 @@ public final class ThreadedRenderer {
     private static native void nSetProcessStatsBuffer(int fd);
     private static native int nGetRenderThreadTid(long nativeProxy);
 
+    /**
+     * 在Native层创建了一个Render Node，并且通过Java层
+     * 的RenderNode类的静态成员函数adopt将其封装在一个Java层的Render Node中。
+     * 这个Render Node即为窗口的Root Render Node。
+     */
     private static native long nCreateRootRenderNode();
+    /**
+     * Native层创建了一个Render Proxy对象。
+     * 该Render Proxy对象以后将负责从Main Thread向Render Thread发送命令。
+     * 
+     */
     private static native long nCreateProxy(boolean translucent, long rootRenderNode);
     private static native void nDeleteProxy(long nativeProxy);
 

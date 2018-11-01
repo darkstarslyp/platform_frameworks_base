@@ -119,6 +119,9 @@ class ZygoteConnection {
      *
      * If the client closes the socket, an {@code EOF} condition is set, which callers can test
      * for by calling {@code ZygoteConnection.isClosedByPeer}.
+     *  
+     * 等价于之前版本的runOnce()
+     * 
      */
     Runnable processOneCommand(ZygoteServer zygoteServer) {
         String args[];
@@ -244,15 +247,17 @@ class ZygoteConnection {
         try {
             if (pid == 0) {
                 // in child
+                // 子进程执行
                 zygoteServer.setForkChild();
 
                 zygoteServer.closeServerSocket();
                 IoUtils.closeQuietly(serverPipeFd);
                 serverPipeFd = null;
-
+                //进入子进程流程
                 return handleChildProc(parsedArgs, descriptors, childPipeFd,
                         parsedArgs.startChildZygote);
             } else {
+                // 父进程执行
                 // In the parent. A pid < 0 indicates a failure and will be handled in
                 // handleParentProc.
                 IoUtils.closeQuietly(childPipeFd);

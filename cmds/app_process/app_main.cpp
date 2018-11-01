@@ -265,6 +265,7 @@ int main(int argc, char* const argv[])
         const char* arg = argv[i++];
         if (strcmp(arg, "--zygote") == 0) {
             zygote = true;
+             //对于64位系统nice_name为zygote64; 32位系统为zygote
             niceName = ZYGOTE_NICE_NAME;
         } else if (strcmp(arg, "--start-system-server") == 0) {
             startSystemServer = true;
@@ -288,6 +289,7 @@ int main(int argc, char* const argv[])
         //
         // The Remainder of args get passed to startup class main(). Make
         // copies of them before we overwrite them with the process name.
+        // 运行application或tool程序
         args.add(application ? String8("application") : String8("tool"));
         runtime.setClassNameAndArgs(className, argc - i, argv + i);
 
@@ -303,6 +305,7 @@ int main(int argc, char* const argv[])
           ALOGV("Class name = %s, args = %s", className.string(), restOfArgs.string());
         }
     } else {
+        //进入zygote模式，创建 /data/dalvik-cache路径
         // We're in zygote mode.
         maybeCreateDalvikCache();
 

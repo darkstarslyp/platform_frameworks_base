@@ -987,6 +987,9 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv, bool zygote)
      * The JavaVM* is essentially per-process, and the JNIEnv* is per-thread.
      * If this call succeeds, the VM is ready, and we can start issuing
      * JNI calls.
+     * 
+     * 初始化虚拟机
+     * 
      */
     if (JNI_CreateJavaVM(pJavaVM, pEnv, &initArgs) < 0) {
         ALOGE("JNI_CreateJavaVM failed\n");
@@ -1061,6 +1064,8 @@ void AndroidRuntime::start(const char* className, const Vector<String8>& options
     //const char* kernelHack = getenv("LD_ASSUME_KERNEL");
     //ALOGD("Found LD_ASSUME_KERNEL='%s'\n", kernelHack);
 
+    // jni注册流程开始
+
     /* start the virtual machine */
     JniInvocation jni_invocation;
     jni_invocation.Init(NULL);
@@ -1072,11 +1077,16 @@ void AndroidRuntime::start(const char* className, const Vector<String8>& options
 
     /*
      * Register android functions.
+     * 
+     * 注册JNI函数
+     * 
      */
     if (startReg(env) < 0) {
         ALOGE("Unable to register all android natives\n");
         return;
     }
+
+    // jni注册流程结束
 
     /*
      * We want to call main() with a String array with arguments in it.

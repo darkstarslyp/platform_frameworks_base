@@ -123,25 +123,37 @@ public class ZygoteInit {
         beginPreload();
         bootTimingsTraceLog.traceEnd(); // BeginPreload
         bootTimingsTraceLog.traceBegin("PreloadClasses");
+        //预加载位于/system/etc/preloaded-classes文件中的类
         preloadClasses();
         bootTimingsTraceLog.traceEnd(); // PreloadClasses
         bootTimingsTraceLog.traceBegin("PreloadResources");
+         //预加载资源，包含drawable和color资源
         preloadResources();
         bootTimingsTraceLog.traceEnd(); // PreloadResources
         Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadAppProcessHALs");
         nativePreloadAppProcessHALs();
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
         Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadOpenGL");
+        //预加载OpenGL
         preloadOpenGL();
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+
+        //通过System.loadLibrary()方法，
+        //预加载"android","compiler_rt","jnigraphics"这3个共享库
         preloadSharedLibraries();
+        
+        //预加载 文本连接符资源
         preloadTextResources();
         // Ask the WebViewFactory to do any initialization that must run in the zygote process,
         // for memory sharing purposes.
+        
+        //仅用于zygote进程，用于内存共享的进程
         WebViewFactory.prepareWebViewInZygote();
         endPreload();
         warmUpJcaProviders();
         Log.d(TAG, "end preload");
+
+
 
         sPreloadComplete = true;
     }
@@ -165,6 +177,10 @@ public class ZygoteInit {
         Log.i(TAG, "Called ZygoteHooks.endPreload()");
     }
 
+    /**
+     * 提前加载动态库
+     * 
+     */
     private static void preloadSharedLibraries() {
         Log.i(TAG, "Preloading shared libraries...");
         System.loadLibrary("android");
@@ -699,16 +715,18 @@ public class ZygoteInit {
             throw new RuntimeException(ex);
         }
 
-        /* For child process */
+        /* For child process, 处于SystemServer进程。*/
         if (pid == 0) {
             if (hasSecondZygote(abiList)) {
                 waitForSecondaryZygote(socketName);
             }
-
+            
+            //在SystemServer进程中不需要ServerSocket,关闭即可。
             zygoteServer.closeServerSocket();
             return handleSystemServerProcess(parsedArgs);
         }
-
+        
+        // 代码流程走到这里表示在Zygote进程中。
         return null;
     }
 
@@ -775,15 +793,20 @@ public class ZygoteInit {
             if (abiList == null) {
                 throw new RuntimeException("No ABI list supplied.");
             }
-
+            
+            //为Zygote注册socket
             zygoteServer.registerServerSocketFromEnv(socketName);
+            
             // In some configurations, we avoid preloading resources and classes eagerly.
             // In such cases, we will preload things prior to our first fork.
             if (!enableLazyPreload) {
                 bootTimingsTraceLog.traceBegin("ZygotePreload");
                 EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_START,
                     SystemClock.uptimeMillis());
-                preload(bootTimingsTraceLog);
+                
+                //预加载类和资源 
+                preload(bootTimingsTraceLog); 
+                
                 EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_END,
                     SystemClock.uptimeMillis());
                 bootTimingsTraceLog.traceEnd(); // ZygotePreload

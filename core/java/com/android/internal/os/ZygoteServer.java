@@ -185,16 +185,22 @@ class ZygoteServer {
                 pollFds[i].events = (short) POLLIN;
             }
             try {
+                //处理轮询状态，当pollFds有事件到来则往下执行，否则阻塞在这里
                 Os.poll(pollFds, -1);
             } catch (ErrnoException ex) {
                 throw new RuntimeException("poll failed", ex);
             }
             for (int i = pollFds.length - 1; i >= 0; --i) {
+
+                //采用I/O多路复用机制，当接收到客户端发出连接请求 或者数据处理请求到来，则往下执行；
+                // 否则进入continue，跳出本次循环。
                 if ((pollFds[i].revents & POLLIN) == 0) {
                     continue;
                 }
 
                 if (i == 0) {
+                    //即fds[0]，代表的是sServerSocket，则意味着有客户端连接请求；
+                    // 则创建ZygoteConnection对象,并添加到fds。
                     ZygoteConnection newPeer = acceptCommandPeer(abiList);
                     peers.add(newPeer);
                     fds.add(newPeer.getFileDesciptor());
